@@ -22,7 +22,7 @@ var gl = null;
 var shader = null;
 var volumeTexture = null;
 var colormapTex = null;
-var fileRegex = /.*\/(\w+)_(\d+)x(\d+)x(\d+)_(\w+)\.*/;
+var fileRegex = /.*\/(\w+)[_x](\d+)[_x](\d+)[_x](\d+)_(\w+)\.*/;
 var proj = null;
 var camera = null;
 var projView = null;
@@ -38,15 +38,18 @@ const center = vec3.set(vec3.create(), 0.5, 0.5, 0.5);
 const up = vec3.set(vec3.create(), 0.0, 1.0, 0.0);
 
 var volumes = {
-	"Fuel": "7d87jcsh0qodk78/fuel_64x64x64_uint8.raw",
-	"Neghip": "zgocya7h33nltu9/neghip_64x64x64_uint8.raw",
-	"Hydrogen Atom": "jwbav8s3wmmxd5x/hydrogen_atom_128x128x128_uint8.raw",
-	"Boston Teapot": "w4y88hlf2nbduiv/boston_teapot_256x256x178_uint8.raw",
-	"Engine": "ld2sqwwd3vaq4zf/engine_256x256x128_uint8.raw",
-	"Bonsai": "rdnhdxmxtfxe0sa/bonsai_256x256x256_uint8.raw",
-	"Foot": "ic0mik3qv4vqacm/foot_256x256x256_uint8.raw",
-	"Skull": "5rfjobn0lvb7tmo/skull_256x256x256_uint8.raw",
-	"Aneurysm": "3ykigaiym8uiwbp/aneurism_256x256x256_uint8.raw",
+    "center": "dl.heeere.com/test_100_100_30_uint8.raw",
+    "full": "dl.heeere.com/test_200_200_30_uint8.raw",
+    "hd_crop": "dl.heeere.com/test_300_300_30_uint8.raw",
+	"base:Fuel": "7d87jcsh0qodk78/fuel_64x64x64_uint8.raw",
+	"base:Neghip": "zgocya7h33nltu9/neghip_64x64x64_uint8.raw",
+	"base:Hydrogen Atom": "jwbav8s3wmmxd5x/hydrogen_atom_128x128x128_uint8.raw",
+	"base:Boston Teapot": "w4y88hlf2nbduiv/boston_teapot_256x256x178_uint8.raw",
+	"base:Engine": "ld2sqwwd3vaq4zf/engine_256x256x128_uint8.raw",
+	"base:Bonsai": "rdnhdxmxtfxe0sa/bonsai_256x256x256_uint8.raw",
+	"base:Foot": "ic0mik3qv4vqacm/foot_256x256x256_uint8.raw",
+	"base:Skull": "5rfjobn0lvb7tmo/skull_256x256x256_uint8.raw",
+	"base:Aneurysm": "3ykigaiym8uiwbp/aneurism_256x256x256_uint8.raw",
 };
 
 var colormaps = {
@@ -59,10 +62,16 @@ var colormaps = {
 };
 
 var loadVolume = function(file, onload) {
+	var url = "https://www.dl.dropboxusercontent.com/s/" + file + "?dl=1";
+    if (file.startsWith('dl.heeere')) {
+        if (window.location.hostname === 'dl.heeere.com') {
+            url = '//'+file
+        } else {
+            url = 'https://cors.heeere.com/https://'+file
+        }
+    }
 	var m = file.match(fileRegex);
 	var volDims = [parseInt(m[2]), parseInt(m[3]), parseInt(m[4])];
-	
-	var url = "https://www.dl.dropboxusercontent.com/s/" + file + "?dl=1";
 	var req = new XMLHttpRequest();
 	var loadingProgressText = document.getElementById("loadingText");
 	var loadingProgressBar = document.getElementById("loadingProgressBar");
