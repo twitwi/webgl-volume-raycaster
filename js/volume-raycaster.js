@@ -41,6 +41,7 @@ var volumes = {
     "center": "dl.heeere.com/test_100_100_30_uint8.raw",
     "full": "dl.heeere.com/test_200_200_30_uint8.raw",
     "hd_crop": "dl.heeere.com/test_300_300_30_uint8.raw",
+    "TEST": "drive://7d87jcsh0qodk78/fuel_64x64x64_uint8.raw",
 	"base:Fuel": "7d87jcsh0qodk78/fuel_64x64x64_uint8.raw",
 	"base:Neghip": "zgocya7h33nltu9/neghip_64x64x64_uint8.raw",
 	"base:Hydrogen Atom": "jwbav8s3wmmxd5x/hydrogen_atom_128x128x128_uint8.raw",
@@ -69,6 +70,9 @@ var loadVolume = function(file, onload) {
         } else {
             url = 'https://cors.heeere.com/https://'+file
         }
+    }
+    if (file.startsWith('drive://')) {
+        url = '.........:';
     }
 	var m = file.match(fileRegex);
 	var volDims = [parseInt(m[2]), parseInt(m[3]), parseInt(m[4])];
