@@ -22,7 +22,7 @@ var gl = null;
 var shader = null;
 var volumeTexture = null;
 var colormapTex = null;
-var fileRegex = /.*\/(\w+)[_x](\d+)[_x](\d+)[_x](\d+)_(\w+)\.*/;
+var fileRegex = /.*\/(.+)[_x](\d+)[_x](\d+)[_x](\d+)_(\w+)\.raw$/;
 var proj = null;
 var camera = null;
 var projView = null;
@@ -41,7 +41,10 @@ var volumes = {
     "center": "dl.heeere.com/test_100_100_30_uint8.raw",
     "full": "dl.heeere.com/test_200_200_30_uint8.raw",
     "hd_crop": "dl.heeere.com/test_300_300_30_uint8.raw",
-    "TEST": "drive:7d87jcsh0qodk78/fuel_64x64x64_uint8.raw",
+    //"NC": "cors://nc-shared02.yourownnet.cloud/s/8mnMB4ZpBGdLyJA/download?path=/&files=testbinarized_300_300_30_uint8.raw",
+    "NC": "cors://nc-shared02.yourownnet.cloud/s/ifrn6SknK5ypdsd/download/testbinarized_300_300_30_uint8.raw",
+    "RENATER": "https://filesender.renater.fr/download.php?token=c4a359b0-98ce-4cdc-83b4-dff8c159e21c&files_ids=25873290",
+    "DRIVE": "drive:1M75qAE8qgAfjT1ZJZvTOeUwwuN9ZbT08",
     "LOCAL": "local:test_200_200_30_uint8.raw",
 	"base:Fuel": "7d87jcsh0qodk78/fuel_64x64x64_uint8.raw",
 	"base:Neghip": "zgocya7h33nltu9/neghip_64x64x64_uint8.raw",
@@ -72,16 +75,25 @@ var loadVolume = function(file, onload) {
             url = 'https://cors.heeere.com/https://'+file
         }
     }
+    if (file.startsWith('https://filesender.renater.fr')) {
+        url = 'https://cors.heeere.com/'+file;
+        file =  'dummydrive/willgetfromheader_300_300_30_uint8.raw';
+    }
+    if (file.startsWith('cors://')) {
+        url = 'https://cors.heeere.com/'+file.replace(/^cors:/, 'https:');
+        file = 'dummycors/'+url.split(/[/=]/).slice(-1)[0];
+        console.log(url, file)
+    }
     if (file.startsWith('drive:')) {
-        url = '......' + file.substring('drive:'.length);
-        //file =  TODO un truc un / et le nom du fichier
+        url = 'https://cors.heeere.com/https://drive.google.com/uc?export=download&id=' + file.substring('drive:'.length);
+        file =  'dummydrive/willgetfromheader_300_300_30_uint8.raw';
     }
     if (file.startsWith('local:')) {
         url = file.substring('local:'.length);
-        file = 'dummy/'+url;
+        file = 'dummylocal/'+url;
     }
     var m = file.match(fileRegex);
-    console.log(file, m)
+    console.log(file, m, url)
 	var volDims = [parseInt(m[2]), parseInt(m[3]), parseInt(m[4])];
 	var req = new XMLHttpRequest();
 	var loadingProgressText = document.getElementById("loadingText");
@@ -93,6 +105,7 @@ var loadVolume = function(file, onload) {
 	req.open("GET", url, true);
 	req.responseType = "arraybuffer";
 	req.onprogress = function(evt) {
+            console.log("PROGRESS", evt.target.getAllResponseHeaders())
 		var vol_size = volDims[0] * volDims[1] * volDims[2];
 		var percent = evt.loaded / vol_size * 100;
 		loadingProgressBar.setAttribute("style", "width: " + percent.toFixed(2) + "%");
@@ -102,6 +115,29 @@ var loadVolume = function(file, onload) {
 		loadingProgressBar.setAttribute("style", "width: 0%");
 	};
 	req.onload = function(evt) {
+            console.log("LOADED", evt.target?.getAllResponseHeaders())
+            console.log("LOADED", evt.originalTarget?.getAllResponseHeaders())
+            console.log("LOADED", evt.currentTarget?.getAllResponseHeaders())
+			// content-disposition: attachment; filename*=UTF-8''testbinarized_300_300_30_uint8.raw; filename="testbinarized_300_300_30_uint8.raw"
+			
+			/*{
+				const contentDisposition = req.headers['content-disposition'];
+				console.log(contentDisposition); // Log the entire content-disposition header for debugging purposes
+				let fileName = null;
+				if (contentDisposition) {
+				const regex = /(?:content|attachment);\s+filename=(.*)/i;
+				const matches = regex.exec(contentDisposition);
+				if (matches && matches[1]) {
+					fileName = matches[1].split('.')[0]; // Extract the file name without extension
+					console.log("FileName: ", fileName); // Print the file name to the console
+				} else {
+					console.error("Error: Invalid Content-Disposition header");
+				}
+				} else {
+				console.warn("Warning: No Content-Disposition header found");
+				}
+				console.log("FILENAME: ", evt.currentTarget?.getAllResponseHeaders()['content'])
+			}*/
 		loadingProgressText.innerHTML = "Loaded Volume";
 		loadingProgressBar.setAttribute("style", "width: 100%");
 		var dataBuffer = req.response;
